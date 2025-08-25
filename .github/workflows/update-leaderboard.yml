@@ -1,0 +1,60 @@
+name: Update Leaderboard
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # toutes les 5 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # URL Railway de ton endpoint (à créer côté Railway)
+  # Variante A : l'API renvoie du TEXTE déjà formaté
+  #   LEADERBOARD_URL: https://tonapp.up.railway.app/leaderboard.txt
+  # Variante B : l'API renvoie du JSON [{display_name,total_ms}]
+  #   LEADERBOARD_URL: https://tonapp.up.railway.app/leaderboard.json
+  LEADERBOARD_URL: ${{ secrets.LEADERBOARD_URL }}
+  # Laisse "TXT" si ton API sort déjà du texte ; mets "JSON" si elle sort du JSON.
+  LEADERBOARD_FORMAT: ${{ secrets.LEADERBOARD_FORMAT }} # "TXT" ou "JSON"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node (for JSON → text)
+        if: env.LEADERBOARD_FORMAT == 'JSON'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch leaderboard (TXT)
+        if: env.LEADERBOARD_FORMAT == 'TXT'
+        run: |
+          curl -fsSL "$LEADERBOARD_URL" -o docs/leaderboard.txt
+
+      - name: Fetch leaderboard (JSON) and convert to TXT
+        if: env.LEADERBOARD_FORMAT == 'JSON'
+        run: |
+          curl -fsSL "$LEADERBOARD_URL" -o /tmp/leaderboard.json
+          node scripts/json_to_txt.js < /tmp/leaderboard.json > docs/leaderboard.txt
+
+      - name: Show diff
+        run: |
+          echo "---- docs/leaderboard.txt ----"
+          tail -n +1 docs/leaderboard.txt | sed -n '1,50p' || true
+
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet -- docs/leaderboard.txt; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/leaderboard.txt
+          git commit -m "chore: update leaderboard.txt"
+          git push
