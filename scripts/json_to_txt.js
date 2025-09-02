@@ -21,7 +21,7 @@ const SOURCE_LEADERBOARD_URL =
 const GH_TOKEN  = process.env.GITHUB_TOKEN || "";                 // PAT avec droits "Contents: Read & write"
 const GH_OWNER  = process.env.GITHUB_OWNER  || "HyroeVRC";
 const GH_REPO   = process.env.GITHUB_REPO   || "TheLoadingScreen";
-const GH_PATH   = process.env.GITHUB_PATH   || "leaderboard.txt"; // chemin dans le dépôt
+const GH_PATH   = process.env.GITHUB_PATH   || "docs/leaderboard.txt"; // chemin dans le dépôt
 // ⚠️ Mets ici la branche qui sert GitHub Pages pour ce dépôt (souvent "gh-pages" ; parfois "main")
 const GH_BRANCH = process.env.GITHUB_BRANCH || "gh-pages";
 
